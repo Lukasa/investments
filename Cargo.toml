@@ -5,3 +5,5 @@ authors = ["Cory Benfield <lukasaoz@gmail.com>"]
 
 [dependencies]
 postgres = "0.9"
+chrono = "0.2"
+byteorder = "*"
