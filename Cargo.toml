@@ -4,6 +4,6 @@ version = "0.1.0"
 authors = ["Cory Benfield <lukasaoz@gmail.com>"]
 
 [dependencies]
-postgres = "0.9"
+postgres = { version = "0.9", features = ["chrono"] }
 chrono = "0.2"
 byteorder = "*"

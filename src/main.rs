@@ -84,8 +84,16 @@ struct Deposit {
 
 fn main() {
     println!("Hello, world!");
-    let first = Currency(8);
-    let second = Currency(16);
+    let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
 
-    println!("Hello currency: {}", first+second)
+    let stmt = conn.prepare("SELECT * FROM balance").unwrap();
+    for row in stmt.query(&[]).unwrap() {
+        let balance = Balance{
+            id: row.get(0),
+            account: row.get(1),
+            as_of: row.get(2),
+            balance: row.get(3)
+        };
+        println!("Found balance: {} at {}", balance.balance, balance.as_of);
+    }
 }
