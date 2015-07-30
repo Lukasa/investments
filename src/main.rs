@@ -83,7 +83,6 @@ struct Deposit {
 }
 
 fn main() {
-    println!("Hello, world!");
     let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
 
     let stmt = conn.prepare("SELECT * FROM balance").unwrap();
