@@ -89,14 +89,18 @@ struct Deposit {
 fn main() {
     let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
 
-    let stmt = conn.prepare("SELECT DISTINCT ON (balance.account) * FROM balance ORDER BY balance.account, balance.as_of DESC").unwrap();
+    let stmt = conn.prepare("
+        SELECT DISTINCT ON (balance.account) accounts.name, balance.balance
+        FROM balance
+        INNER JOIN accounts ON balance.account=accounts.id
+        ORDER BY balance.account, balance.as_of DESC"
+    ).unwrap();
+
+    println!("Balances:");
+
     for row in stmt.query(&[]).unwrap() {
-        let balance = Balance{
-            id: row.get(0),
-            account: row.get(1),
-            as_of: row.get(2),
-            balance: row.get(3)
-        };
-        println!("Found balance: {} at {}", balance.balance, balance.as_of);
+        let name: String = row.get(0);
+        let balance: Currency = row.get(1);
+        println!("\t{}: {}", name, balance);
     }
 }
