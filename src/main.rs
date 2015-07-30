@@ -2,11 +2,13 @@
 extern crate postgres;
 extern crate chrono;
 extern crate byteorder;
+extern crate num;
 
 use byteorder::{ReadBytesExt, WriteBytesExt, BigEndian};
 use std::io::{Read, Write};
 use std::ops::{Add, Sub};
 use std::fmt;
+use num::integer::{div_rem};
 
 use postgres::{Connection, SslMode};
 use postgres::types::{FromSql, ToSql, Type, SessionInfo, IsNull};
@@ -34,9 +36,11 @@ impl Sub for Currency {
     }
 }
 
+// TODO: Have a currency display that understands locale.
 impl fmt::Display for Currency {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
+        let (top, rem) = div_rem(self.0, 100);
+        write!(f, "£{}.{:02}", top, rem)
     }
 }
 
