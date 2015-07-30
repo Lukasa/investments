@@ -89,7 +89,7 @@ struct Deposit {
 fn main() {
     let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
 
-    let stmt = conn.prepare("SELECT * FROM balance").unwrap();
+    let stmt = conn.prepare("SELECT DISTINCT ON (balance.account) * FROM balance ORDER BY balance.account, balance.as_of DESC").unwrap();
     for row in stmt.query(&[]).unwrap() {
         let balance = Balance{
             id: row.get(0),
