@@ -45,15 +45,23 @@ fn prepare_interface<'a, 'b>() -> ArgMatches<'a, 'b> {
                                    .about("list accounts");
     accounts_sub = accounts_sub.subcommand(accounts_list);
 
+    // Subcommands for the 'balance' subcommand.
+    let mut balances_sub = SubCommand::with_name("balance")
+                                  .about("manage balances");
+    let accounts_list = SubCommand::with_name("list")
+                                   .about("list balances by account");
+    balances_sub = balances_sub.subcommand(accounts_list);
+
     // Register top-level subcommands.
     app = app.subcommand(accounts_sub);
+    app = app.subcommand(balances_sub);
 
     return app.get_matches();
 }
 
 
 // List the accounts stored and their balances.
-fn list_accounts() {
+fn list_balances() {
     let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
 
     let stmt = conn.prepare("
@@ -63,7 +71,7 @@ fn list_accounts() {
         ORDER BY balance.account, balance.as_of DESC"
     ).unwrap();
 
-    println!("Accounts:");
+    println!("Balances:");
 
     for row in stmt.query(&[]).unwrap() {
         let account_id: i32 = row.get(0);
@@ -71,6 +79,27 @@ fn list_accounts() {
         let balance: Currency = row.get(2);
         println!("\t({}) {}: {}", account_id, name, balance);
     }
+}
+
+
+// Show the accounts in the system.
+fn list_accounts() {
+    let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
+
+    let stmt = conn.prepare("
+        SELECT accounts.id, accounts.name
+        FROM accounts
+        ORDER BY accounts.id"
+    ).unwrap();
+
+    println!("Accounts:");
+
+    for row in stmt.query(&[]).unwrap() {
+        let account_id: i32 = row.get(0);
+        let name: String = row.get(1);
+        println!("\t{}: {}", account_id, name);
+    }
+
 }
 
 
@@ -83,11 +112,20 @@ fn handle_accounts(matches: &ArgMatches) {
 }
 
 
+// Handle the balance subcommand.
+fn handle_balances(matches: &ArgMatches) {
+    match matches.subcommand() {
+        ("list", Some(matches)) => {list_balances()},
+        _                       => {},
+    }
+}
+
 fn main() {
     let matches = prepare_interface();
 
     match matches.subcommand() {
         ("account", Some(matches)) => {handle_accounts(matches)},
+        ("balance", Some(matches)) => {handle_balances(matches)},
         _                          => {},
     }
 }
