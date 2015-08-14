@@ -10,7 +10,7 @@ mod currency;
 use postgres::{Connection, SslMode};
 use chrono::NaiveDateTime;
 use currency::Currency;
-use clap::{App, SubCommand, ArgMatches};
+use clap::{App, SubCommand, ArgMatches, Arg};
 
 // Define the data in the database.
 struct Account {
@@ -50,7 +50,22 @@ fn prepare_interface<'a, 'b>() -> ArgMatches<'a, 'b> {
                                   .about("manage balances");
     let balances_list = SubCommand::with_name("list")
                                    .about("list balances by account");
-    balances_sub = balances_sub.subcommand(balances_list);
+    let balances_update = SubCommand::with_name("update")
+                                     .about("add a new balance for an account")
+                                     .arg(
+                                          Arg::with_name("ACCOUNT_ID")
+                                              .help("The account to update")
+                                              .required(true)
+                                              .index(1)
+                                     )
+                                     .arg(
+                                          Arg::with_name("BALANCE")
+                                              .help("The current balance of the account, e.g. £1234.56")
+                                              .required(true)
+                                              .index(2)
+                                     );
+    balances_sub = balances_sub.subcommand(balances_list)
+                               .subcommand(balances_update);
 
     // Register top-level subcommands.
     app = app.subcommand(accounts_sub);
