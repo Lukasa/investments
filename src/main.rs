@@ -48,9 +48,9 @@ fn prepare_interface<'a, 'b>() -> ArgMatches<'a, 'b> {
     // Subcommands for the 'balance' subcommand.
     let mut balances_sub = SubCommand::with_name("balance")
                                   .about("manage balances");
-    let accounts_list = SubCommand::with_name("list")
+    let balances_list = SubCommand::with_name("list")
                                    .about("list balances by account");
-    balances_sub = balances_sub.subcommand(accounts_list);
+    balances_sub = balances_sub.subcommand(balances_list);
 
     // Register top-level subcommands.
     app = app.subcommand(accounts_sub);
