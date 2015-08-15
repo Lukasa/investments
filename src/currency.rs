@@ -35,6 +35,29 @@ impl fmt::Display for Currency {
     }
 }
 
+impl ::std::str::FromStr for Currency {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Currency, &'static str> {
+        let mut result: i64 = 0;
+        let mut chars: Vec<char> = s.chars().collect();
+
+        // Remove currency symbol.
+        chars.remove(0);
+
+
+        for c in chars {
+            match c {
+                '0' ... '9' => {result = (result * 10) + (c as i64 - '0' as i64)}
+                '.' | ',' | ' ' => {}  // Ignore punctuation
+                _ => {return Err("invalid character")}
+            }
+        }
+
+        Ok(Currency(result))
+    }
+}
+
 impl FromSql for Currency {
     fn from_sql<R: Read>(_: &Type, raw: &mut R, _: &SessionInfo) -> Result<Currency, Error> {
         // Money is sent simply as an int64.
