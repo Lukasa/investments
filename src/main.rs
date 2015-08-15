@@ -13,8 +13,10 @@ use chrono::{NaiveDateTime, UTC};
 use currency::Currency;
 use clap::{App, SubCommand, ArgMatches, Arg};
 
-const ACCOUNT_ID_ARG_NAME: &'static str = "ACCOUNT_ID";
-const BALANCE_ARG_NAME:    &'static str = "BALANCE";
+const ACCOUNT_ID_ARG_NAME:   &'static str = "ACCOUNT_ID";
+const BALANCE_ARG_NAME:      &'static str = "BALANCE";
+const ACCOUNT_NAME_ARG_NAME: &'static str = "ACCOUNT_NAME";
+const ACCOUNT_TYPE_ARG_NAME: &'static str = "ACCOUNT_TYPE";
 
 // Define the data in the database.
 struct Account {
@@ -47,7 +49,22 @@ fn prepare_interface<'a, 'b>() -> ArgMatches<'a, 'b> {
                                   .about("manage accounts");
     let accounts_list = SubCommand::with_name("list")
                                    .about("list accounts");
-    accounts_sub = accounts_sub.subcommand(accounts_list);
+    let accounts_add = SubCommand::with_name("add")
+                                  .about("add new account")
+                                  .arg(
+                                      Arg::with_name(ACCOUNT_NAME_ARG_NAME)
+                                          .help("The name of the new account")
+                                          .required(true)
+                                          .index(1)
+                                  )
+                                  .arg(
+                                      Arg::with_name(ACCOUNT_TYPE_ARG_NAME)
+                                          .help("The type of the new account")
+                                          .required(true)
+                                          .index(2)
+                                  );
+    accounts_sub = accounts_sub.subcommand(accounts_list)
+                               .subcommand(accounts_add);
 
     // Subcommands for the 'balance' subcommand.
     let mut balances_sub = SubCommand::with_name("balance")
@@ -119,6 +136,24 @@ fn update_balances(matches: &ArgMatches) {
 }
 
 
+fn add_account(matches: &ArgMatches) {
+    let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
+
+    let account = Account {
+        id: 0,
+        name: matches.value_of(ACCOUNT_NAME_ARG_NAME).unwrap().to_string(),
+        kind: matches.value_of(ACCOUNT_TYPE_ARG_NAME).unwrap().to_string(),
+    };
+
+    let stmt = conn.prepare("
+        INSERT INTO accounts (name, kind) VALUES ($1, $2)
+    ").unwrap();
+    let updates = stmt.execute(&[&account.name, &account.kind]).unwrap();
+
+    if updates == 0 {println!("Failed to add new account.")}
+}
+
+
 // Show the accounts in the system.
 fn list_accounts() {
     let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
@@ -136,7 +171,6 @@ fn list_accounts() {
         let name: String = row.get(1);
         println!("\t{}: {}", account_id, name);
     }
-
 }
 
 
@@ -144,6 +178,7 @@ fn list_accounts() {
 fn handle_accounts(matches: &ArgMatches) {
     match matches.subcommand() {
         ("list", Some(matches)) => {list_accounts()},
+        ("add", Some(matches))  => {add_account(matches)},
         _                       => {},
     }
 }
