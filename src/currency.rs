@@ -78,3 +78,17 @@ impl ToSql for Currency {
     accepts!(Type::Money);
     to_sql_checked!();
 }
+
+
+// Tests for Currency
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn currency_from_basic_string() {
+        let test_string = "£123,456.78";
+        let parsed: Currency = test_string.parse().unwrap();
+        assert_eq!(parsed, Currency(12345678));
+    }
+}
