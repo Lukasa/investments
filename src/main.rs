@@ -3,14 +3,18 @@ extern crate postgres;
 extern crate chrono;
 extern crate byteorder;
 extern crate num;
+#[macro_use(value_t)]
 extern crate clap;
 
 mod currency;
 
 use postgres::{Connection, SslMode};
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, UTC};
 use currency::Currency;
 use clap::{App, SubCommand, ArgMatches, Arg};
+
+const ACCOUNT_ID_ARG_NAME: &'static str = "ACCOUNT_ID";
+const BALANCE_ARG_NAME:    &'static str = "BALANCE";
 
 // Define the data in the database.
 struct Account {
@@ -53,13 +57,13 @@ fn prepare_interface<'a, 'b>() -> ArgMatches<'a, 'b> {
     let balances_update = SubCommand::with_name("update")
                                      .about("add a new balance for an account")
                                      .arg(
-                                          Arg::with_name("ACCOUNT_ID")
+                                          Arg::with_name(ACCOUNT_ID_ARG_NAME)
                                               .help("The account to update")
                                               .required(true)
                                               .index(1)
                                      )
                                      .arg(
-                                          Arg::with_name("BALANCE")
+                                          Arg::with_name(BALANCE_ARG_NAME)
                                               .help("The current balance of the account, e.g. £1234.56")
                                               .required(true)
                                               .index(2)
@@ -97,6 +101,24 @@ fn list_balances() {
 }
 
 
+fn update_balances(matches: &ArgMatches) {
+    let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
+
+    let balance = Balance {
+        id: 0,
+        account: value_t!(matches.value_of(ACCOUNT_ID_ARG_NAME), i32).unwrap(),
+        as_of: UTC::now().naive_utc(),
+        balance: value_t!(matches.value_of(BALANCE_ARG_NAME), Currency).unwrap(),
+    };
+
+    let stmt = conn.prepare("
+        INSERT INTO balance (account, as_of, balance) VALUES
+            ($1, $2, $3)
+    ").unwrap();
+    let updates = stmt.execute(&[&balance.account, &balance.as_of, &balance.balance]).unwrap();
+}
+
+
 // Show the accounts in the system.
 fn list_accounts() {
     let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
@@ -130,8 +152,9 @@ fn handle_accounts(matches: &ArgMatches) {
 // Handle the balance subcommand.
 fn handle_balances(matches: &ArgMatches) {
     match matches.subcommand() {
-        ("list", Some(matches)) => {list_balances()},
-        _                       => {},
+        ("list", Some(matches))   => {list_balances()},
+        ("update", Some(matches)) => {update_balances(matches)},
+        _                         => {},
     }
 }
 
