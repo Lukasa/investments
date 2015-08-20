@@ -9,7 +9,6 @@ use currency::Currency;
 
 // Define the data in the database.
 struct Balance {
-    id: i32,
     account: i32,
     as_of: chrono::NaiveDateTime,
     balance: Currency
@@ -45,7 +44,6 @@ fn update_balances(matches: &ArgMatches) {
     let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
 
     let balance = Balance {
-        id: 0,
         account: value_t!(matches.value_of(ACCOUNT_ID_ARG_NAME), i32).unwrap(),
         as_of: UTC::now().naive_utc(),
         balance: value_t!(matches.value_of(BALANCE_ARG_NAME), Currency).unwrap(),
@@ -55,14 +53,14 @@ fn update_balances(matches: &ArgMatches) {
         INSERT INTO balance (account, as_of, balance) VALUES
             ($1, $2, $3)
     ").unwrap();
-    let updates = stmt.execute(&[&balance.account, &balance.as_of, &balance.balance]).unwrap();
+    stmt.execute(&[&balance.account, &balance.as_of, &balance.balance]).unwrap();
 }
 
 
 // Handle the balance subcommand.
 pub fn handle(matches: &ArgMatches) {
     match matches.subcommand() {
-        ("list", Some(matches))   => {list_balances()},
+        ("list", Some(_))         => {list_balances()},
         ("update", Some(matches)) => {update_balances(matches)},
         _                         => {},
     }
@@ -71,7 +69,7 @@ pub fn handle(matches: &ArgMatches) {
 
 pub fn get_subcommands<'a, 'b, 'c, 'd, 'e, 'f>() -> App<'a, 'b, 'c, 'd, 'e, 'f> {
     // Subcommands for the 'balance' subcommand.
-    let mut balances_sub = SubCommand::with_name("balance")
+    let balances_sub = SubCommand::with_name("balance")
                                   .about("manage balances");
     let balances_list = SubCommand::with_name("list")
                                    .about("list balances by account");
