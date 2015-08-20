@@ -7,7 +7,6 @@ const ACCOUNT_TYPE_ARG_NAME: &'static str = "ACCOUNT_TYPE";
 
 // An account object that matches the database.
 struct Account {
-    id: i32,
     name: String,
     kind: String,
 }
@@ -16,7 +15,6 @@ fn add_account(matches: &ArgMatches) {
     let conn = Connection::connect("postgres://cory@localhost:5432/finances", &SslMode::None).unwrap();
 
     let account = Account {
-        id: 0,
         name: matches.value_of(ACCOUNT_NAME_ARG_NAME).unwrap().to_string(),
         kind: matches.value_of(ACCOUNT_TYPE_ARG_NAME).unwrap().to_string(),
     };
@@ -53,7 +51,7 @@ fn list_accounts() {
 // Handle the account subcommand.
 pub fn handle(matches: &ArgMatches) {
     match matches.subcommand() {
-        ("list", Some(matches)) => {list_accounts()},
+        ("list", Some(_))       => {list_accounts()},
         ("add", Some(matches))  => {add_account(matches)},
         _                       => {},
     }
