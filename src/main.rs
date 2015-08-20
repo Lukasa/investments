@@ -10,10 +10,9 @@ mod account;
 mod balance;
 mod currency;
 
-use postgres::{Connection, SslMode};
-use chrono::{NaiveDateTime, UTC};
+use chrono::NaiveDateTime;
 use currency::Currency;
-use clap::{App, SubCommand, ArgMatches, Arg};
+use clap::{App, ArgMatches};
 
 struct Deposit {
     id: i32,
