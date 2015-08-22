@@ -9,17 +9,9 @@ extern crate clap;
 mod account;
 mod balance;
 mod currency;
+mod deposit;
 
-use chrono::NaiveDateTime;
-use currency::Currency;
 use clap::{App, ArgMatches};
-
-struct Deposit {
-    id: i32,
-    account: i32,
-    at: chrono::NaiveDateTime,
-    amount: Currency
-}
 
 fn prepare_interface<'a, 'b>() -> ArgMatches<'a, 'b> {
     // Top level command.
@@ -29,9 +21,9 @@ fn prepare_interface<'a, 'b>() -> ArgMatches<'a, 'b> {
     // Register top-level subcommands.
     app = app.subcommand(account::get_subcommands());
     app = app.subcommand(balance::get_subcommands());
+    app = app.subcommand(deposit::get_subcommands());
     return app.get_matches();
 }
-
 
 fn main() {
     let matches = prepare_interface();
@@ -39,6 +31,7 @@ fn main() {
     match matches.subcommand() {
         ("account", Some(matches)) => {account::handle(matches)},
         ("balance", Some(matches)) => {balance::handle(matches)},
+        ("deposit", Some(matches)) => {deposit::handle(matches)},
         _                          => {},
     }
 }
